@@ -62,8 +62,9 @@ for ilev = 1:maxlev
     lbltot(:,ilev) = cellfun(@(a) fullfile(a{1:min(length(a),ilev)}), lbl,'uni', 0);
    
     [unq, ui, uj] = unique(lbltot(:,ilev));
-    [blah, xtot(ui,ilev)] = consolidator(uj, x, @sum);
-    
+    xtot(ui,ilev) = splitapply(@sum, x, uj);
+    % [blah, xtot(ui,ilev)] = consolidator(uj, x, @sum);
+  
 end
 
 xtot = xtot./total;
