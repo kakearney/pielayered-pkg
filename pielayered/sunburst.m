@@ -1,4 +1,4 @@
-function h = pielayered(x, lbl, total)
+function h = sunburst(x, lbl, total)
 %PIELAYERED Plot a subdivided pie chart
 %
 % h = pielayered(x, lbl, total)
@@ -16,7 +16,6 @@ function h = pielayered(x, lbl, total)
 %   total:  number indicating a full pie.  If sum(x) < total, then the pie
 %           will be less than a full circle.  Default to sum(x) if not
 %           included.
-
 
 
 % Note: labels w/ slashes won't work right now
@@ -61,10 +60,9 @@ for ilev = 1:maxlev
     
     lbltot(:,ilev) = cellfun(@(a) fullfile(a{1:min(length(a),ilev)}), lbl,'uni', 0);
    
-    [unq, ui, uj] = unique(lbltot(:,ilev));
+    [unq, ui, uj] = unique(lbltot(:,ilev));    
     xtot(ui,ilev) = splitapply(@sum, x, uj);
-    % [blah, xtot(ui,ilev)] = consolidator(uj, x, @sum);
-  
+    
 end
 
 xtot = xtot./total;
@@ -74,7 +72,8 @@ xtot = xtot./total;
 maxpt = 100;
 r = 0:maxlev;
 
-plotdata = cell(0,7);
+plotdata = cell(0,8);
+count = 0;
 for ilev = 1:maxlev
     
     theta = [0; cumsum(xtot(:,ilev))*2*pi];
@@ -84,11 +83,14 @@ for ilev = 1:maxlev
             dth = theta(is+1) - theta(is);
             
             if ~(dth == 0)
+
+                count = count+1;
+
                 npt = max(2, ceil(dth/(2*pi/maxpt)));
                 th = linspace(theta(is), theta(is+1), npt);
 
-                xouter = r(end) .* cos(th);
-                youter = r(end) .* sin(th);
+                xouter = r(ilev+1) .* cos(th);
+                youter = r(ilev+1) .* sin(th);
                 xinner = r(ilev) .* cos(th);
                 yinner = r(ilev) .* sin(th);
                 x = [xouter fliplr(xinner) xouter(1)];
@@ -98,19 +100,19 @@ for ilev = 1:maxlev
                 yc = (r(ilev)+r(ilev+1))./2 .* sin((theta(is+1) + theta(is))/2);
 
                 lblparts = regexp(lbltot{is,ilev}, filesep, 'split');
-                plotdata = [plotdata; {is, ilev, x, y, xc, yc, lblparts{end}}];
+                shortlbl = lblparts{end};
+                longlbl = lbltot{is,ilev};
+                plotdata = [plotdata; {is, ilev, x, y, xc, yc, shortlbl, longlbl}];
             end
             
         end
     end
-    
-    
 end
     
 % Plot
 
 for ip = 1:size(plotdata)
-    h.p(ip) = patch(plotdata{ip,3}, plotdata{ip,4}, 'w');
+    h.p(ip) = patch(plotdata{ip,3}, plotdata{ip,4}, 'w', 'tag', plotdata{ip,8});
     h.t(ip) = text(plotdata{ip,5}, plotdata{ip,6}, plotdata{ip,7}, 'horiz', 'center');
 end    
 uistack(h.t, 'top');
